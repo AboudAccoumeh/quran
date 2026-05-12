@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصحف المدينة المنورة</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #c9b896;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .nav button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #8b7748;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .nav button:hover {
+            background: #6d5a36;
+        }
+
+        .nav button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #copyBtn {
+            background: #2c5f2d;
+        }
+
+        #copyBtn:hover {
+            background: #1e4220;
+        }
+
+        .page-info {
+            font-size: 18px;
+            color: #8b7748;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-info input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            font-size: 16px;
+            border: 1px solid #8b7748;
+            border-radius: 4px;
+            background: #fefcf5;
+            color: #8b7748;
+            font-weight: bold;
+        }
+
+        .page-info input::-webkit-inner-spin-button,
+        .page-info input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .mushaf-page {
+            background: linear-gradient(145deg, #fefcf5, #f7f2e3);
+            width: 560px;
+            min-height: 820px;
+            padding: 50px 45px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            border: 4px double #8b7748;
+            position: relative;
+        }
+
+        .mushaf-page::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            bottom: 24px;
+            border: 1px solid #8b7748;
+            pointer-events: none;
+        }
+
+        .qcf-text {
+            font-family: 'QCF_P1', serif;
+            font-size: 42px;
+            line-height: 1.35;
+            color: #000;
+            word-wrap: break-word;
+            text-align: justify;
+            text-align-last: center;
+            user-select: text;
+        }
+
+        .qcf-text .word {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .qcf-text .word:hover {
+            background-color: rgba(100, 149, 237, 0.2);
+        }
+
+        .qcf-text .word.selected {
+            background-color: rgba(100, 149, 237, 0.4);
+        }
+
+        .ayah {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .ayah.selected {
+            background-color: rgba(100, 149, 237, 0.2);
+        }
+
+        .qcf-text {
+            cursor: text;
+        }
+
+        .page-num {
+            position: absolute;
+            bottom: 38px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 22px;
+            color: #8b7748;
+        }
+
+        .loading {
+            color: #8b7748;
+            font-size: 20px;
+        }
+
+        .surah-header {
+            font-family: 'Scheherazade', 'Noto Sans Arabic', 'Amiri', serif;
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            color: #131b28;
+            margin-bottom: 15px;
+            padding: 30px 40px;
+            background-image: url('SurahHeader.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .bismillah {
+            font-family: 'QCF_Bismillah', serif;
+            font-size: 42px;
+            text-align: center;
+            color: #000;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Hifz Mode */
+        #hifzToggle {
+            background: #5c4a1f;
+        }
+
+        #hifzToggle.active {
+            background: #1e4220;
+        }
+
+        .hifz-block {
+            color: #f59e0b; /* Yellow/Gold color */
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .hifz-block:hover {
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+
+        .hifz-word {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            display: none;
+            position: fixed;
+            background: #fefcf5;
+            border: 2px solid #8b7748;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 500px;
+            max-height: 450px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            font-family: 'Scheherazade', serif;
+            pointer-events: auto;
+        }
+
+        #tooltip:hover {
+            display: block !important;
+        }
+
+        #tooltip .similar-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f5f0e6;
+            border-radius: 6px;
+            border-right: 4px solid #8b7748;
+            cursor: pointer;
+        }
+
+        #tooltip .similar-item:hover {
+            background: #e8e0d0;
+            border-right-color: #2c5f2d;
+        }
+
+        #tooltip .similar-item .surah-name {
+            font-weight: bold;
+            color: #1a5c2e;
+            font-size: 14px;
+        }
+
+        #tooltip .similar-item .ayah-text {
+            font-size: 18px;
+            color: #131b28;
+            margin-top: 5px;
+        }
+
+        #tooltip .similar-item .shared-words {
+            font-size: 12px;
+            color: #2563eb;
+            margin-top: 5px;
+        }
+
+        #tooltip .current-word {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+            padding: 10px;
+            background: #e0e7ff;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <button id="firstBtn">« الأولى</button>
+        <button id="prevBtn" disabled>‹ السابق</button>
+        <span class="page-info">صفحة <input type="number" id="pageInput" min="1" max="604" value="1"> / 604</span>
+        <button id="nextBtn">التالي ›</button>
+        <button id="lastBtn">الأخيرة »</button>
+        <button id="copyBtn" disabled>نسخ الآية</button>
+        <button id="hifzToggle">حفظ</button>
+    </div>
+    <div id="tooltip"></div>
+    <div class="mushaf-page">
+        <div id="content" class="qcf-text"></div>
+        <div id="pageNumber" class="page-num">1</div>
+    </div>
+
+    <script>
+        const TOTAL_PAGES = 604;
+
+        let pagesData = {};
+        let surahInfo = {};
+        let quranText = {};
+        let hifzData = {};
+        let isHifzMode = false;
+        let currentPage = 1;
+
+        // Word mapping: lineIdx -> [{charIndex, quranWordIndex, word}]
+        let wordMapping = {};
+
+        async function loadQuranText() {
+            try {
+                const response = await fetch('quran-uthmani.json');
+                const data = await response.json();
+
+                quranText = {};
+                for (const surah of data.data.surahs) {
+                    quranText[surah.number] = surah.ayahs.map(a => a.text.replace('\ufeff', ''));
+                }
+
+                // Build word mapping for all 6236 lines
+                buildWordMapping(data);
+
+                console.log('Loaded Quran text from local file');
+            } catch (e) {
+                console.error('Failed to load Quran text:', e);
+            }
+        }
+
+        function buildWordMapping(quranData) {
+            // Get all ayahs in order
+            const allAyahs = [];
+            for (const surah of quranData.data.surahs) {
+                for (const ayah of surah.ayahs) {
+                    allAyahs.push(ayah);
+                }
+            }
+
+            // Load mushaf to get char counts per line
+            fetch('mushaf.txt').then(r => r.text()).then(text => {
+                const lines = text.split('\n').filter(l => l.trim());
+
+                for (let lineIdx = 0; lineIdx < Math.min(lines.length, allAyahs.length); lineIdx++) {
+                    const line = lines[lineIdx];
+                    const commaIdx = line.indexOf(',');
+                    if (commaIdx === -1) continue;
+
+                    const ligatures = line.substring(commaIdx + 1).trim();
+                    // Remove last char (ayah number marker)
+                    const chars = ligatures.slice(0, -1);
+                    const mushafWordCount = chars.length;
+
+                    // Get Quran words
+                    const quranWords = getWordsFromText(allAyahs[lineIdx].text);
+                    const quranWordCount = quranWords.length;
+
+                    // Build mapping
+                    wordMapping[lineIdx] = [];
+
+                    if (mushafWordCount === quranWordCount) {
+                        // Direct 1:1 mapping
+                        for (let i = 0; i < mushafWordCount; i++) {
+                            wordMapping[lineIdx].push({
+                                charIndex: i,
+                                quranWordIndex: i,
+                                word: quranWords[i]
+                            });
+                        }
+                    } else if (mushafWordCount === quranWordCount + 1) {
+                        // One stop mark - skip it
+                        // Find which position has the stop mark (usually near the end)
+                        // For now, map first quranWordCount chars to words
+                        for (let i = 0; i < quranWordCount; i++) {
+                            wordMapping[lineIdx].push({
+                                charIndex: i,
+                                quranWordIndex: i,
+                                word: quranWords[i]
+                            });
+                        }
+                    }
+                }
+                console.log('Built word mapping for ' + Object.keys(wordMapping).length + ' lines');
+            });
+        }
+
+        function getWordsFromText(text) {
+            // Split handling multiple spaces
+            return text.trim().split(/\s+/).filter(w => w);
+        }
+
+        async function loadHifzData() {
+            try {
+                const response = await fetch('hifz_data.json');
+                hifzData = await response.json();
+                console.log('Loaded hifz data: ' + Object.keys(hifzData).length + ' trigrams');
+                console.log('Sample keys:', Object.keys(hifzData).slice(0, 3));
+            } catch (e) {
+                console.error('Failed to load hifz data:', e);
+            }
+        }
+
+        function toggleHifzMode() {
+            isHifzMode = !isHifzMode;
+            document.getElementById('hifzToggle').classList.toggle('active', isHifzMode);
+            renderPage(currentPage);
+        }
+
+        function getAyahText(surahNum, ayahNum) {
+            return quranText[surahNum] ? (quranText[surahNum][ayahNum - 1] || '') : '';
+        }
+
+        const HARAKAT = ['ً', 'ٍ', 'ٌ', 'َ', 'ِ', 'ُ', 'ّ', 'ْ', 'ٰ', 'ٱ'];
+
+        function removeBismillah(text) {
+            if (!text) return '';
+            // Try multiple bismillah patterns (with different harakat orderings)
+            const bismPatterns = [
+                'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+                'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+            ];
+            for (const pat of bismPatterns) {
+                if (text.includes(pat)) {
+                    const idx = text.indexOf(pat);
+                    const remaining = text.substring(idx + pat.length).trim();
+                    if (remaining.length > 5) return remaining;
+                    return '';
+                }
+            }
+            // Simple check: if starts with بسم or بِسْم
+            if (text.startsWith('بِسْمِ') || text.startsWith('بسم')) {
+                const parts = text.split(' ');
+                // Find end of bismillah (usually 4-5 words)
+                let bismEnd = -1;
+                for (let i = 1; i < Math.min(6, parts.length); i++) {
+                    if (parts[i].includes('لَّهِ') || parts[i] === 'لله' || parts[i].includes('لِٱل')) {
+                        bismEnd = i;
+                        break;
+                    }
+                }
+                if (bismEnd > 0) {
+                    const remaining = parts.slice(bismEnd + 1).join(' ').trim();
+                    if (remaining.length > 5) return remaining;
+                    return '';
+                }
+            }
+            return text;
+        }
+
+        function normalizeWord(word) {
+            let w = word.trim();
+            for (const h of HARAKAT) {
+                w = w.replaceAll(h, '');
+            }
+            return w;
+        }
+
+        function getTrigramsFromText(text, removeBism = true) {
+            if (removeBism) {
+                text = removeBismillah(text);
+            }
+            const words = text.split(' ');
+            const trigrams = [];
+            for (let i = 0; i < words.length - 2; i++) {
+                const w1 = normalizeWord(words[i]);
+                const w2 = normalizeWord(words[i + 1]);
+                const w3 = normalizeWord(words[i + 2]);
+                if (w1 && w2 && w3) {
+                    trigrams.push(w1 + " " + w2 + " " + w3);
+                }
+            }
+            return trigrams;
+        }
+
+        function getMatchingTrigramGroups(key) {
+            if (!hifzData) return [];
+
+            const [surah, ayah] = key.split(':').map(Number);
+            const text = getAyahText(surah, ayah);
+            const words = text.split(' ');
+
+            // Find all matching trigrams with their positions
+            const matches = [];
+            for (let i = 0; i < words.length - 2; i++) {
+                const w1 = normalizeWord(words[i]);
+                const w2 = normalizeWord(words[i + 1]);
+                const w3 = normalizeWord(words[i + 2]);
+                const trigram = w1 + " " + w2 + " " + w3;
+
+                if (hifzData[trigram]) {
+                    const similarAyahs = hifzData[trigram].filter(k => k !== key);
+                    if (similarAyahs.length > 0) {
+                        matches.push({
+                            startIdx: i,
+                            endIdx: i + 2,
+                            trigram: trigram,
+                            trigramWords: [w1, w2, w3],
+                            similarAyahs: similarAyahs
+                        });
+                    }
+                }
+            }
+
+            if (matches.length === 0) return [];
+
+            // Sort by position
+            matches.sort((a, b) => a.startIdx - b.startIdx);
+
+            // Merge consecutive trigrams into one group
+            const groups = [];
+            let currentGroup = {
+                startIdx: matches[0].startIdx,
+                endIdx: matches[0].endIdx,
+                matches: [matches[0]]
+            };
+
+            for (let i = 1; i < matches.length; i++) {
+                const curr = matches[i];
+                const prev = currentGroup;
+
+                if (curr.startIdx <= prev.endIdx) {
+                    // Overlapping or touching (share at least one word) - merge
+                    currentGroup.endIdx = Math.max(prev.endIdx, curr.endIdx);
+                    currentGroup.matches.push(curr);
+                } else {
+                    groups.push(currentGroup);
+                    currentGroup = {
+                        startIdx: curr.startIdx,
+                        endIdx: curr.endIdx,
+                        matches: [curr]
+                    };
+                }
+            }
+            groups.push(currentGroup);
+
+            // Build final groups with merged similar ayahs
+            return groups.map(g => {
+                const allSimilarAyahs = new Set();
+                const trigramWordSets = g.matches.map(m => ({
+                    words: m.trigramWords,
+                    similarAyahs: m.similarAyahs
+                }));
+
+                g.matches.forEach(m => {
+                    m.similarAyahs.forEach(a => allSimilarAyahs.add(a));
+                });
+
+                return {
+                    startIdx: g.startIdx,
+                    endIdx: g.endIdx,
+                    trigramWordSets: trigramWordSets,
+                    similarAyahs: Array.from(allSimilarAyahs)
+                };
+            });
+        }
+
+        function findSimilarAyahs(currentKey) {
+            const groups = getMatchingTrigramGroups(currentKey);
+            if (groups.length === 0) return [];
+
+            // Collect all unique similar ayahs with their matching words
+            const similarMap = new Map();
+
+            for (const group of groups) {
+                for (const otherKey of group.similarAyahs) {
+                    if (!similarMap.has(otherKey)) {
+                        const [s, a] = otherKey.split(':').map(Number);
+                        similarMap.set(otherKey, {
+                            key: otherKey,
+                            surah: s,
+                            ayah: a,
+                            text: getAyahText(s, a),
+                            trigramWordSets: [] // Store which trigram(s) match this ayah
+                        });
+                    }
+                    // Add matching trigram words from this group
+                    for (const wordSet of group.trigramWordSets) {
+                        if (wordSet.similarAyahs.includes(otherKey)) {
+                            similarMap.get(otherKey).trigramWordSets.push(wordSet.words);
+                        }
+                    }
+                }
+            }
+
+            return Array.from(similarMap.values());
+        }
+
+        function checkSimilarAyahs(key) {
+            if (!key || !hifzData) return false;
+            return getMatchingTrigramGroups(key).length > 0;
+        }
+
+        let tooltipTimeout = null;
+
+        function onSimilarHover(el, e) {
+            clearTimeout(tooltipHideTimeout);
+            showSimilarTooltip(el);
+        }
+
+        let tooltipHideTimeout = null;
+
+        function onSimilarLeave() {
+            // Small delay before hiding to allow moving mouse to tooltip
+            tooltipHideTimeout = setTimeout(() => {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.style.display = 'none';
+            }, 300);
+        }
+
+        function keepTooltipVisible() {
+            clearTimeout(tooltipHideTimeout);
+        }
+
+        function hideTooltipOnLeave() {
+            onSimilarLeave(); // Use same delay when leaving tooltip
+        }
+
+        window.clickSimilarAyah = function (surahNum, ayahNum) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+            tooltip.style.visibility = 'hidden';
+
+            // Now navigate
+            goToAyah(surahNum, ayahNum);
+
+            // Restore visibility after navigation
+            setTimeout(() => {
+                tooltip.style.visibility = 'visible';
+            }, 100);
+        }
+
+        window.goToAyah = function (surahNum, ayahNum) {
+            clearTimeout(tooltipHideTimeout);
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+
+            // Find which page this ayah is on
+            for (const page in pagesData) {
+                const ayahs = pagesData[page];
+                for (const a of ayahs) {
+                    const mapping = lineToAyahMap || getLineToAyahMapping();
+                    const loc = mapping[a.lineIdx];
+                    if (loc && loc.surah === surahNum && loc.ayah === ayahNum) {
+                        // Navigate to page and select this ayah
+                        const pageNum = parseInt(page);
+                        renderPage(pageNum);
+
+                        // Find and select the ayah element
+                        setTimeout(() => {
+                            const el = document.querySelector(`[data-key="${surahNum}:${ayahNum}"]`);
+                            if (el) {
+                                selectAyah(el);
+                            }
+                        }, 100);
+                        return;
+                    }
+                }
+            }
+        };
+
+        function highlightMatchingWords(text, trigramWordSets) {
+            if (!trigramWordSets || trigramWordSets.length === 0) return text;
+
+            const words = text.split(' ');
+
+            // For each position, determine if it should be highlighted
+            // Prioritize longer trigram matches
+            const wordCountToHighlight = new Map(); // position -> word count to highlight (prefer higher)
+
+            // Sort by length descending (longer trigrams first)
+            const sortedSets = trigramWordSets.sort((a, b) => b.length - a.length);
+
+            for (const wordSet of sortedSets) {
+                // Find this word set in the text
+                for (let i = 0; i < words.length - wordSet.length + 1; i++) {
+                    const slice = words.slice(i, i + wordSet.length).map((w, idx) => normalizeWord(w));
+                    if (slice.join(' ') === wordSet.join(' ')) {
+                        // Mark these positions with the word count
+                        for (let j = 0; j < wordSet.length; j++) {
+                            const pos = i + j;
+                            const currentCount = wordCountToHighlight.get(pos) || 0;
+                            if (wordSet.length >= currentCount) {
+                                wordCountToHighlight.set(pos, wordSet.length);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return words.map((word, i) => {
+                if (wordCountToHighlight.has(i)) {
+                    return `<span class="hifz-word">${word}</span>`;
+                }
+                return word;
+            }).join(' ');
+        }
+
+        function showSimilarTooltip(el) {
+            const groupDataRaw = el.getAttribute('data-group');
+            if (!groupDataRaw) return;
+            const group = JSON.parse(groupDataRaw);
+
+            // Fetch full ayah data for similar ones
+            const similar = [];
+
+            for (const otherKey of group.similarAyahs) {
+                const [s, a] = otherKey.split(':').map(Number);
+                const text = getAyahText(s, a);
+                
+                // For this specific other ayah, find which of our current group's trigrams match it
+                const matchingTrigramWords = [];
+                for (const wordSet of group.trigramWordSets) {
+                    if (wordSet.similarAyahs.includes(otherKey)) {
+                        matchingTrigramWords.push(wordSet.words);
+                    }
+                }
+
+                similar.push({
+                    key: otherKey,
+                    surah: s,
+                    ayah: a,
+                    text: text,
+                    trigramWordSets: matchingTrigramWords
+                });
+            }
+
+            if (similar.length === 0) return;
+
+            const tooltip = document.getElementById('tooltip');
+            let html = `<div class="current-word">آيات مشابهة لهذا الجزء (${similar.length})</div>`;
+
+            for (const s of similar) {
+                const highlightedText = highlightMatchingWords(s.text, s.trigramWordSets);
+                html += `<div class="similar-item" onclick="clickSimilarAyah(${s.surah}, ${s.ayah})">
+                    <div class="surah-name">سورة ${surahInfo[s.surah]?.name || s.surah} [${s.surah}:${s.ayah}]</div>
+                    <div class="ayah-text">${highlightedText}</div>
+                </div>`;
+            }
+
+            tooltip.innerHTML = html;
+
+            // Measure tooltip size
+            tooltip.style.display = 'block';
+            const tooltipHeight = tooltip.offsetHeight;
+            tooltip.style.display = 'none';
+
+            // Pure viewport coordinates
+            const rect = el.getBoundingClientRect();
+            const padding = 15;
+
+            // X stays as is, Y adjusts based on available space
+            const left = rect.left + padding;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            let top;
+            if (spaceBelow >= tooltipHeight + padding) {
+                // Show below
+                top = rect.bottom + padding;
+            } else if (spaceAbove >= tooltipHeight + padding) {
+                // Show above
+                top = rect.top - tooltipHeight - padding;
+            } else {
+                // Default to below (will overflow but at least visible)
+                top = rect.bottom + padding;
+            }
+
+            // Apply to fixed position tooltip
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.style.display = 'block';
+
+            // Keep visible when moving to tooltip
+            tooltip.onmouseenter = keepTooltipVisible;
+            tooltip.onmouseleave = hideTooltipOnLeave;
+        }
+
+        function getLineToAyahMapping() {
+            const mapping = {};
+            const surahStarts = Object.entries(surahInfo).map(([num, info]) => ({
+                surah: parseInt(num),
+                start: info.start
+            })).sort((a, b) => a.start - b.start);
+
+            for (let lineIdx = 0; lineIdx < 6236; lineIdx++) {
+                let currentSurah = 1;
+                let ayahInSurah = 1;
+
+                for (let i = 0; i < surahStarts.length; i++) {
+                    if (lineIdx >= surahStarts[i].start) {
+                        if (i < surahStarts.length - 1 && lineIdx >= surahStarts[i + 1].start) {
+                            continue;
+                        }
+                        currentSurah = surahStarts[i].surah;
+                        ayahInSurah = lineIdx - surahStarts[i].start + 1;
+                        break;
+                    }
+                }
+                mapping[lineIdx] = { surah: currentSurah, ayah: ayahInSurah };
+            }
+            return mapping;
+        }
+
+        let lineToAyahMap = null;
+        let selectedAyahLineIdx = null;
+
+        function getInitialPage() {
+            const hash = window.location.hash;
+            if (hash.startsWith('#page=')) {
+                const page = parseInt(hash.replace('#page=', ''));
+                if (page >= 1 && page <= 604) {
+                    return page;
+                }
+            }
+            return 1;
+        }
+
+        async function loadFont(pageNum, customFontName = null) {
+            const pageStr = String(pageNum).padStart(3, '0');
+            const fontName = customFontName || 'QCF_P' + pageNum;
+            const styleId = customFontName ? 'font-bismillah' : 'font-' + pageStr;
+
+            if (document.getElementById(styleId)) return true;
+
+            try {
+                const response = await fetch('qcf_fonts/QCF_P' + pageStr + '.woff2');
+                if (response.ok) {
+                    const buffer = await response.arrayBuffer();
+                    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+                    const style = document.createElement('style');
+                    style.id = styleId;
+                    style.textContent = `@font-face { font-family: '${fontName}'; src: url(data:font/woff2;base64,${base64}) format('woff2'); }`;
+                    document.head.appendChild(style);
+                    return true;
+                }
+            } catch (e) { }
+            return false;
+        }
+
+        async function loadMushaf() {
+            const response = await fetch('mushaf.txt');
+            const text = await response.text();
+            const lines = text.split('\n').filter(line => line.trim());
+
+            // Build pages data - each line has format: page,ligatures
+            pagesData = {};
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const commaIdx = line.indexOf(',');
+                if (commaIdx === -1) continue;
+
+                const pageNum = parseInt(line.substring(0, commaIdx).trim());
+                const ligatures = line.substring(commaIdx + 1).trim();
+
+                if (!pagesData[pageNum]) pagesData[pageNum] = [];
+                pagesData[pageNum].push({ lineIdx: i, text: ligatures });
+            }
+            console.log('Loaded pages: ' + Object.keys(pagesData).length);
+        }
+
+        async function loadSurahInfo() {
+            try {
+                const response = await fetch('surah_info.json');
+                surahInfo = await response.json();
+                console.log('Loaded surah info: ' + Object.keys(surahInfo).length + ' surahs');
+            } catch (e) {
+                console.error('Failed to load surah info:', e);
+            }
+        }
+
+        function getSurahHeadersForPage(pageNum) {
+            const headers = [];
+            const pageAyahs = pagesData[pageNum] || [];
+            if (pageAyahs.length === 0) return headers;
+
+            const startLineIdx = pageAyahs[0].lineIdx;
+            const endLineIdx = pageAyahs[pageAyahs.length - 1].lineIdx;
+
+            for (const [surahNum, info] of Object.entries(surahInfo)) {
+                const surahStartIdx = info.start;
+                if (surahStartIdx >= startLineIdx && surahStartIdx <= endLineIdx) {
+                    const relativeIdx = surahStartIdx - startLineIdx;
+                    headers.push({ surahNum: parseInt(surahNum), name: info.name, relativeIdx });
+                }
+            }
+            return headers.sort((a, b) => a.relativeIdx - b.relativeIdx);
+        }
+
+        function renderAyahWithHighlights(text, key) {
+            if (!isHifzMode || !key || !hifzData) {
+                return text;
+            }
+
+            const groups = getMatchingTrigramGroups(key);
+            if (groups.length === 0) return text;
+
+            // Mushaf text has one character per word (no spaces)
+            let result = '';
+            let lastIdx = 0;
+
+            // Sort groups by startIdx to process them in order
+            groups.sort((a, b) => a.startIdx - b.startIdx);
+
+            for (const group of groups) {
+                // Add ligatures before the group
+                if (group.startIdx > lastIdx) {
+                    result += text.substring(lastIdx, group.startIdx);
+                }
+
+                // Add the group as a hifz-block
+                const blockLigatures = text.substring(group.startIdx, group.endIdx + 1);
+                const groupJson = JSON.stringify({
+                    key: key,
+                    startIdx: group.startIdx,
+                    endIdx: group.endIdx,
+                    similarAyahs: group.similarAyahs,
+                    trigramWordSets: group.trigramWordSets
+                }).replace(/"/g, '&quot;');
+
+                result += `<span class="hifz-block" data-group="${groupJson}" onmouseenter="onSimilarHover(this, event)" onmouseleave="onSimilarLeave()">${blockLigatures}</span>`;
+                
+                lastIdx = group.endIdx + 1;
+            }
+
+            // Add remaining ligatures
+            if (lastIdx < text.length) {
+                result += text.substring(lastIdx);
+            }
+
+            return result;
+        }
+
+        function renderPage(page) {
+            // Hide tooltip when switching pages
+            clearTimeout(tooltipHideTimeout);
+            document.getElementById('tooltip').style.display = 'none';
+
+            // Update URL without reload
+            history.replaceState(null, '', '#page=' + page);
+
+            currentPage = page;
+
+            // Load font on demand
+            loadFont(page);
+
+            // Set page-specific font
+            const contentEl = document.getElementById('content');
+            contentEl.style.fontFamily = `'QCF_P${page}', serif`;
+
+            // Get ayahs for this page
+            const ayahs = pagesData[page] || [];
+            const headers = getSurahHeadersForPage(page);
+
+            // Build HTML with surah headers
+            let html = '';
+
+            const NO_BISMILLAH = [1, 9]; // Surah Fatiha (1) and Tawba (9)
+
+            if (headers.length === 0) {
+                html = ayahs.map((a, i) => {
+                    const key = lineToAyahMap ? `${lineToAyahMap[a.lineIdx].surah}:${lineToAyahMap[a.lineIdx].ayah}` : null;
+                    const hasSimilar = key && isHifzMode && checkSimilarAyahs(key);
+                    const className = 'ayah' + (hasSimilar ? ' has-similar' : '');
+                    const text = renderAyahWithHighlights(a.text, key);
+                    return `<span class="${className}" data-line="${a.lineIdx}" data-key="${key || ''}" onclick="selectAyah(this)">${text}</span>`;
+                }).join('');
+            } else {
+                let lastIdx = 0;
+                for (const header of headers) {
+                    html += ayahs.slice(lastIdx, header.relativeIdx).map((a, i) => {
+                        const key = lineToAyahMap ? `${lineToAyahMap[a.lineIdx].surah}:${lineToAyahMap[a.lineIdx].ayah}` : null;
+                        const hasSimilar = key && isHifzMode && checkSimilarAyahs(key);
+                        const className = 'ayah' + (hasSimilar ? ' has-similar' : '');
+                        const text = renderAyahWithHighlights(a.text, key);
+                        return `<span class="${className}" data-line="${a.lineIdx}" data-key="${key || ''}" onclick="selectAyah(this)">${text}</span>`;
+                    }).join('');
+                    html += `<div class="surah-header">سورة ${header.name}</div>`;
+
+                    // Add bismillah for all surahs except Fatiha (1) and Towba (9)
+                    if (!NO_BISMILLAH.includes(header.surahNum)) {
+                        html += `<span class="bismillah">ﭑﭒﭓﭔ</span>`;
+                    }
+
+                    lastIdx = header.relativeIdx;
+                }
+                html += ayahs.slice(lastIdx).map((a, i) => {
+                    const key = lineToAyahMap ? `${lineToAyahMap[a.lineIdx].surah}:${lineToAyahMap[a.lineIdx].ayah}` : null;
+                    const hasSimilar = key && isHifzMode && checkSimilarAyahs(key);
+                    const className = 'ayah' + (hasSimilar ? ' has-similar' : '');
+                    const text = renderAyahWithHighlights(a.text, key);
+                    return `<span class="${className}" data-line="${a.lineIdx}" data-key="${key || ''}" onclick="selectAyah(this)">${text}</span>`;
+                }).join('');
+            }
+
+            document.getElementById('content').innerHTML = html;
+            document.getElementById('pageInput').value = page;
+            document.getElementById('pageNumber').textContent = page;
+
+            document.getElementById('prevBtn').disabled = page === 1;
+            document.getElementById('nextBtn').disabled = page === TOTAL_PAGES;
+        }
+
+        async function init() {
+            document.getElementById('content').innerHTML = '<span class="loading">جاري التحميل...</span>';
+            // Load font 1 as QCF_Bismillah for bismillah on all pages
+            await loadFont(1, 'QCF_Bismillah');
+            await loadMushaf();
+            await loadSurahInfo();
+            lineToAyahMap = getLineToAyahMapping();
+            await loadQuranText();
+            await loadHifzData();
+            renderPage(getInitialPage());
+
+            // Add selection change listener
+            document.addEventListener('selectionchange', () => {
+                const selection = window.getSelection();
+                const copyBtn = document.getElementById('copyBtn');
+
+                if (selection && !selection.isCollapsed) {
+                    copyBtn.disabled = false;
+                    copyBtn.textContent = 'نسخ المحدد';
+                } else {
+                    copyBtn.textContent = 'نسخ الآية';
+                    copyBtn.disabled = selectedAyahLineIdx === null;
+                }
+            });
+        }
+
+        document.getElementById('hifzToggle').onclick = toggleHifzMode;
+
+        window.selectAyah = function (el) {
+            document.querySelectorAll('.ayah.selected').forEach(a => a.classList.remove('selected'));
+            el.classList.add('selected');
+
+            selectedAyahLineIdx = parseInt(el.getAttribute('data-line'));
+            document.getElementById('copyBtn').disabled = false;
+        };
+
+        document.getElementById('copyBtn').onclick = function () {
+            copySelectedText();
+        };
+
+        function copySelectedText() {
+            const selection = window.getSelection();
+
+            if (!selection || selection.isCollapsed) {
+                // No selection - copy entire ayah
+                if (selectedAyahLineIdx !== null) {
+                    const mapping = lineToAyahMap || getLineToAyahMapping();
+                    const { surah, ayah } = mapping[selectedAyahLineIdx] || { surah: 1, ayah: 1 };
+                    const arabicText = getAyahText(surah, ayah);
+                    if (arabicText) {
+                        navigator.clipboard.writeText(arabicText).then(() => {
+                            console.log('Copied full ayah: ' + surah + ':' + ayah);
+                        });
+                    }
+                }
+                return;
+            }
+
+            // User selected text - need to find which characters in which ayah were selected
+            const range = selection.getRangeAt(0);
+
+            // Find start and end ayahs
+            let startNode = range.startContainer;
+            let startAyah = startNode.nodeType === 1 ?
+                startNode.closest('.ayah') :
+                startNode.parentElement?.closest('.ayah');
+
+            let endNode = range.endContainer;
+            let endAyah = endNode.nodeType === 1 ?
+                endNode.closest('.ayah') :
+                endNode.parentElement?.closest('.ayah');
+
+            if (!startAyah || !endAyah) {
+                // Fall back to selected ayah
+                if (selectedAyahLineIdx !== null) {
+                    const mapping = lineToAyahMap || getLineToAyahMapping();
+                    const { surah, ayah } = mapping[selectedAyahLineIdx] || { surah: 1, ayah: 1 };
+                    const quranText = getAyahText(surah, ayah);
+                    if (quranText) {
+                        const words = quranText.split(/\s+/).filter(w => w);
+                        if (words.length > 0) {
+                            navigator.clipboard.writeText(words[0]);
+                        }
+                    }
+                }
+                return;
+            }
+
+            const allAyahs = Array.from(document.querySelectorAll('.ayah'));
+            const startIndex = allAyahs.indexOf(startAyah);
+            const endIndex = allAyahs.indexOf(endAyah);
+
+            if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+                return;
+            }
+
+            const selectedAyahsEls = allAyahs.slice(startIndex, endIndex + 1);
+            let finalCopiedParts = [];
+
+            for (let i = 0; i < selectedAyahsEls.length; i++) {
+                const ayahEl = selectedAyahsEls[i];
+
+                // Get the line index from the ayah element
+                const lineIdx = parseInt(ayahEl.getAttribute('data-line'));
+                if (isNaN(lineIdx)) continue;
+
+                // Get mapping for this line
+                const mapping = lineToAyahMap || getLineToAyahMapping();
+                const { surah, ayah } = mapping[lineIdx] || { surah: 1, ayah: 1 };
+
+                // Get the full text in the DOM
+                const fullText = ayahEl.textContent;
+
+                // Determine intersection range for this ayah
+                const ayahRange = document.createRange();
+                ayahRange.selectNodeContents(ayahEl);
+
+                const intersection = document.createRange();
+
+                if (i === 0) {
+                    intersection.setStart(range.startContainer, range.startOffset);
+                } else {
+                    intersection.setStart(ayahRange.startContainer, ayahRange.startOffset);
+                }
+
+                if (i === selectedAyahsEls.length - 1) {
+                    intersection.setEnd(range.endContainer, range.endOffset);
+                } else {
+                    intersection.setEnd(ayahRange.endContainer, ayahRange.endOffset);
+                }
+
+                const selectedText = intersection.toString();
+                if (!selectedText) continue;
+
+                // Find position of selected text within the ayah
+                const startInAyah = fullText.indexOf(selectedText);
+                if (startInAyah < 0) {
+                    // Selected text not found in ayah, copy full ayah
+                    const quranText = getAyahText(surah, ayah);
+                    if (quranText) finalCopiedParts.push(quranText);
+                    continue;
+                }
+
+                // Calculate start and end character positions
+                const startCharIndex = startInAyah;
+                let endCharIndex = startInAyah + selectedText.length;
+
+                let isSeparatorSelected = false;
+                if (endCharIndex === fullText.length) {
+                    isSeparatorSelected = true;
+                    // Ignore the separator so it isn't copied as a word
+                    endCharIndex = fullText.length - 1;
+                }
+
+                if (startCharIndex >= endCharIndex && !isSeparatorSelected) {
+                    continue; // Empty selection
+                }
+
+                // Get Quran words for this ayah
+                const quranText = getAyahText(surah, ayah);
+                if (!quranText) continue;
+
+                const quranWords = quranText.split(/\s+/).filter(w => w);
+
+                // Get words from start index to end index
+                const startWordIndex = startCharIndex;
+                const endWordIndex = endCharIndex;
+
+                const wordsToCopy = quranWords.slice(startWordIndex, endWordIndex).join(' ');
+
+                console.log('Copying chars', startCharIndex, 'to', endCharIndex, '=', endWordIndex - startWordIndex, 'words');
+                console.log('Copied:', wordsToCopy);
+
+                if (wordsToCopy || isSeparatorSelected) {
+                    let partText = wordsToCopy;
+                    if (isSeparatorSelected) {
+                        partText += (partText ? ' ' : '') + `(${ayah})`;
+                    }
+                    finalCopiedParts.push(partText);
+                }
+            }
+
+            if (finalCopiedParts.length > 0) {
+                const finalCopiedText = finalCopiedParts.join(' ').replace(/\s+/g, ' ').trim();
+                navigator.clipboard.writeText(finalCopiedText);
+            }
+        }
+
+        document.getElementById('firstBtn').onclick = () => renderPage(1);
+        document.getElementById('prevBtn').onclick = () => renderPage(Math.max(1, currentPage - 1));
+        document.getElementById('nextBtn').onclick = () => renderPage(Math.min(TOTAL_PAGES, currentPage + 1));
+        document.getElementById('lastBtn').onclick = () => renderPage(TOTAL_PAGES);
+        document.getElementById('pageInput').addEventListener('change', (e) => {
+            const page = parseInt(e.target.value);
+            if (page >= 1 && page <= TOTAL_PAGES) {
+                renderPage(page);
+            } else {
+                e.target.value = currentPage;
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.target.id === 'pageInput') return;
+
+            // Ctrl+C to copy selected text (word-level mapping)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                copySelectedText();
+                return;
+            }
+
+            if (e.key === 'ArrowLeft') renderPage(Math.min(TOTAL_PAGES, currentPage + 1));
+            if (e.key === 'ArrowRight') renderPage(Math.max(1, currentPage - 1));
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
