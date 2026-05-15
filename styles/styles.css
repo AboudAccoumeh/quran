@@ -145,7 +145,7 @@ body {
 }
 
 .bismillah {
-    font-family: 'QCF_Bismillah', serif;
+    font-family: 'QPC_Bismillah', serif;
     font-size: 1em;
     text-align: center;
     color: #000;
@@ -254,8 +254,11 @@ body {
 
 .preview-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,7 +274,7 @@ body {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 .preview-header {
@@ -354,7 +357,7 @@ body {
     font-size: 17px;
     font-weight: bold;
     z-index: 3000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     direction: rtl;
 }
 

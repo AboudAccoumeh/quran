@@ -16,8 +16,8 @@ class MushafApp {
   async init() {
     document.getElementById('content').innerHTML = '<span class="loading">جاري التحميل...</span>'
 
-    // Bismillah font = QCF page 1 font with a custom font-family name
-    await this._loadFont(1, 'QCF_Bismillah')
+    // Bismillah font = QPC page 1 font (BSML.woff2) with a custom font-family name
+    await this._loadFont(1, 'QPC_Bismillah', true)
 
     await this.data.load()
     this._buildAyahPageMap()
@@ -47,24 +47,31 @@ class MushafApp {
 
   // Load a QCF font from the woff2 file and inject it as a base64 @font-face
   // Each page has its own font (QCF_P001.woff2 .. QCF_P604.woff2)
-  async _loadFont(pageNum, customName) {
-    const pageStr = String(pageNum).padStart(3, '0')
-    const fontName = customName || 'QCF_P' + pageNum
-    const styleId = customName ? 'font-bismillah' : 'font-' + pageStr
+  async _loadFont(pageNum, customName, isBismillah = false) {
+    const fontName = customName || 'p' + pageNum
+    const fontFile = isBismillah ? 'p1.woff2' : 'p' + pageNum + '.woff2'
+    const styleId = customName || 'font-' + pageNum
     if (!document.getElementById(styleId)) {
       try {
-        const res = await fetch('qcf_fonts/QCF_P' + pageStr + '.woff2')
+        const res = await fetch('qpc-fonts/' + fontFile)
         if (res.ok) {
           const buf = await res.arrayBuffer()
-          const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
+          let binary = ''
+          const bytes = new Uint8Array(buf)
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i])
+          }
+          const b64 = btoa(binary)
           const style = document.createElement('style')
           style.id = styleId
           style.textContent = `@font-face { font-family: '${fontName}'; src: url(data:font/woff2;base64,${b64}) format('woff2'); }`
           document.head.appendChild(style)
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error(`Failed to load font ${fontFile}:`, e)
+      }
     }
-    try { await document.fonts.load(`100px '${fontName}'`) } catch (e) {}
+    try { await document.fonts.load(`100px '${fontName}'`) } catch (e) { }
   }
 
   // Read initial page from URL hash (#page=N) or default to page 1
@@ -177,7 +184,7 @@ class MushafApp {
     mushafPage.style.padding = pad + 'px'
 
     const fontLoad = this._loadFont(page)
-    const fontName = 'QCF_P' + page
+    const fontName = 'p' + page
     const lines = this.data.getPageLines(page)
 
     // Build empty 15-line grid
@@ -243,7 +250,7 @@ class MushafApp {
     if (!targetWidth || targetWidth <= 0) return 42
     const measurer = document.createElement('div')
     measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:' + testSize + 'px'
-    measurer.style.fontFamily = `'QCF_P${page}', serif`
+    measurer.style.fontFamily = `'p${page}', serif`
     document.body.appendChild(measurer)
     let maxWidth = 0
     for (const line of lines) {
@@ -322,22 +329,22 @@ class MushafApp {
   _copy(showPreview = true) {
     this._previewKeys = []
     let lastSurah = 0, lastAyah = 0
- 
+
     const sel = window.getSelection()
- 
+
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
       if (!this.selectedAyahKey) return
       const [s, a] = this.selectedAyahKey.split(':').map(Number)
       let text = this.data.getAyahText(s, a)
       if (!text) return
-      
+
       if (a === 1 && s !== 1 && s !== 9) {
         text = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ' + text
         this._previewKeys = ['basmallah', this.selectedAyahKey]
       } else {
         this._previewKeys = [this.selectedAyahKey]
       }
-      
+
       this._previewText = text
       lastSurah = s; lastAyah = a
     } else {
@@ -349,7 +356,7 @@ class MushafApp {
           picked.push(ws)
         }
       }
- 
+
       if (picked.length === 0) {
         if (!this.selectedAyahKey) return
         const [s, a] = this.selectedAyahKey.split(':').map(Number)
@@ -370,10 +377,10 @@ class MushafApp {
             sequence.push({ key: 'basmallah', type: 'basmallah', value: ws.dataset.text, el: ws })
           }
         }
- 
+
         const parts = []
         let currentGroup = null
- 
+
         for (const item of sequence) {
           if (!currentGroup || currentGroup.key !== item.key || currentGroup.type !== item.type) {
             if (currentGroup) {
@@ -393,7 +400,7 @@ class MushafApp {
           }
           currentGroup.values.push(item.value)
         }
- 
+
         if (currentGroup) {
           if (currentGroup.type === 'ayah') {
             const [s, a] = currentGroup.key.split(':').map(Number)
@@ -407,17 +414,17 @@ class MushafApp {
             this._previewKeys.push('basmallah')
           }
         }
- 
+
         if (parts.length === 0) return
         this._previewText = parts.join(' ')
       }
     }
- 
+
     this._previewLastSurah = lastSurah
     this._previewLastAyah = lastAyah
- 
+
     const isTextSelected = (sel && !sel.isCollapsed && sel.rangeCount > 0);
- 
+
     if (showPreview && !isTextSelected) {
       this._showCopyPreview()
     } else {
@@ -483,13 +490,13 @@ class MushafApp {
       const [s, a] = lastKey.split(':').map(Number)
       lastSurah = s; lastAyah = a
     }
- 
+
     const next = this._getNextAyah(lastSurah, lastAyah)
     if (!next) return
     const nextKey = `${next.surah}:${next.ayah}`
     const nextText = this.data.getAyahText(next.surah, next.ayah)
     if (!nextText) return
- 
+
     let prefix = ' '
     if (next.surah !== lastSurah) {
       if (next.surah === 1 || next.surah === 9) {
@@ -499,7 +506,7 @@ class MushafApp {
         this._previewKeys.push('basmallah')
       }
     }
- 
+
     this._previewKeys.push(nextKey)
     this._previewLastSurah = next.surah
     this._previewLastAyah = next.ayah
