@@ -10,6 +10,7 @@ class MushafApp {
     this._suppressHover = false      // blocks tooltip show during navigation
     this._previewKeys = []           // ayah keys currently in the copy preview
     this._previewText = ''           // accumulated text in the copy preview
+    this._renderId = 0               // incremented per renderPage call to cancel stale renders
   }
 
   // Entry point: load bismillah font, load all data, build page map, render
@@ -168,6 +169,7 @@ class MushafApp {
 
   // Render one mushaf page (1-604) from pages.json into a 15-line grid
   async renderPage(page, onComplete) {
+    const renderId = ++this._renderId
     this._hideTooltip()
     this.selectedAyahKey = null
     document.getElementById('copyBtn').disabled = true
@@ -196,6 +198,7 @@ class MushafApp {
     el.style.fontFamily = `'${fontName}', serif`
 
     await fontLoad
+    if (this._renderId !== renderId) return
 
     // Measure once layout is established
     const containerWidth = el.clientWidth

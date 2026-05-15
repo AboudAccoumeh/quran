@@ -142,8 +142,10 @@ class QuranData {
   // Strip Arabic diacritics (harakat) for trigram matching
   getNormalizedWord(text) {
     const harakat = ['ً', 'ٍ', 'ٌ', 'َ', 'ِ', 'ُ', 'ّ', 'ْ', 'ٰ']
+    const stopMarks = ['ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', 'ۛ']
     let w = text.trim()
     for (const h of harakat) w = w.replaceAll(h, '')
-    return w
+    for (const m of stopMarks) w = w.replaceAll(m, '')
+    return w.trim()
   }
 }

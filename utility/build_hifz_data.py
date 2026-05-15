@@ -1,7 +1,9 @@
 import json
+import re
 from collections import defaultdict
 
 HARAKAT = ['ً', 'ٍ', 'ٌ', 'َ', 'ِ', 'ُ', 'ّ', 'ْ', 'ٰ']
+STOP_MARKS = ['ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', 'ۛ']
 
 with open('data/imlaei.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
@@ -9,6 +11,8 @@ with open('data/imlaei.json', 'r', encoding='utf-8') as f:
 def normalize(w):
     for h in HARAKAT:
         w = w.replace(h, '')
+    for m in STOP_MARKS:
+        w = w.replace(m, '')
     return w.strip()
 
 def is_ayah_marker(text):
@@ -18,6 +22,9 @@ def get_trigrams(text):
     text = text.strip()
     if not text:
         return []
+    for m in STOP_MARKS:
+        text = text.replace(m, '')
+    text = re.sub(r'\s+', ' ', text).strip()
     words = text.split(' ')
     trigrams = []
     for i in range(len(words) - 2):
